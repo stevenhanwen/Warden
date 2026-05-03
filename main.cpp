@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
         // print sorted processes
         for (auto& p : processes) {
             if (p.mb > limit) {
-                std::cout << "⚠️  " << p.name << " is using too much memory: " << p.mb << " MB\n";
+                std::cout << "⚠️  " << p.name << " is using lots of memory: " << p.mb << " MB\n";
                 if (kill_mode) {
                     std::cout << "Are you sure you want to kill " << p.name << "? (y/n): ";
                     char confirm;
