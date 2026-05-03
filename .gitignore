@@ -1,0 +1,18 @@
+# Build output
+build/
+*.dSYM/
+*.o
+*.obj
+
+# Compiled binaries
+main
+proclist
+warden
+
+# macOS
+.DS_Store
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
