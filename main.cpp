@@ -5,16 +5,23 @@
 #include <vector>
 #include <unistd.h>
 #include <signal.h>
+#include <map>
+#include <array>
 
-struct Process
-{
+
+struct Process {
     std::string name;
     long mb;
     int pid;
 };
 
-int main(int argc, char *argv[])
-{
+struct AppGroup {
+    std::string group_name; 
+    long total_mb;
+    int num_processes;
+};
+
+int main(int argc, char *argv[]) {
     long limit = 500; // default limit of 500mb
     bool watch_mode = false;
     bool kill_mode = false;
@@ -22,8 +29,7 @@ int main(int argc, char *argv[])
     // read config file
     std::ifstream config("warden.conf");
     std::vector<std::string> protected_processes;
-    if (config.is_open())
-    {
+    if (config.is_open()) {
         std::string line;
         while (std::getline(config, line))
         {
@@ -41,8 +47,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (argc > 1)
-    {
+    if (argc > 1) {
         for (int i = 1; i < argc; i++)
         {
             if (std::string(argv[i]) == "--watch")
@@ -77,7 +82,6 @@ int main(int argc, char *argv[])
 
         int pids[1024];
         int count = proc_listallpids(pids, sizeof(pids));
-
         std::vector<Process> processes;
 
         for (int i = 0; i < count; i++) {
@@ -113,24 +117,68 @@ int main(int argc, char *argv[])
                   processes.end(), 
                   [](const Process& a, const Process& b) {return a.mb > b.mb;});
 
-        // print sorted processes
+
+        // Group processes by a app groups and search using a map
+        std::map<std::string, std::array<long, 2>> app_groups_map;
+        // Let value be an array [a, b] where a is the total mb and b is the num_processes
+        // Clean each process name and check if it is in the map
         for (auto& p : processes) {
-            if (p.mb > limit) {
-                std::cout << "⚠️  " << p.name << " is using lots of memory: " << p.mb << " MB\n";
+            // Search for a parenthesis if there is one
+            size_t paren = p.name.find('(');
+            std::string base_name;
+
+            if (paren == std::string::npos) {
+                base_name = p.name;  // no ( found, use full name
+            } else {
+                base_name = p.name.substr(0, paren);  // cut at (
+            }
+
+            // trim trailing space
+            while (!base_name.empty() && base_name.back() == ' ') {
+                base_name.pop_back();
+            }
+
+            if (app_groups_map.find(base_name) != app_groups_map.end()) {
+                app_groups_map[base_name][0] += p.mb;
+                app_groups_map[base_name][1] += 1;
+            }
+            else {
+                app_groups_map.insert({base_name, {p.mb, 1}});
+            }
+        }
+
+        // TODO: convert to a vector to sort by total mb for each app group. 
+
+
+        // print sorted processes
+        // int counter = 0;
+        for (const auto& app_values : app_groups_map) {
+            const std::string& app_name = app_values.first;
+            const std::array<long, 2>& values = app_values.second;
+
+            if (values[0] > limit) {
+                std::cout << "⚠️  " << app_name << " is using lots of memory: " << values[0] << " MB (" << values[1] << "processes)" << "\n";
                 if (kill_mode) {
-                    std::cout << "Are you sure you want to kill " << p.name << "? (y/n): ";
+                    std::cout << "Are you sure you want to kill " << app_name << "? (y/n): ";
                     char confirm;
                     std::cin >> confirm;
                     if (confirm == 'y') {
-                        std::cout << "🔪 killing " << p.name << " (PID: " << p.pid << ")\n";
-                        kill(p.pid, SIGTERM);
+                        std::cout << "🔪 killing " << app_name<< "\n";
+                        // TO DO:
+                        // Modify this to use a for loop to kill the processes: kill(p.pid, SIGTERM);
                     } else {
-                        std::cout << "skipping " << p.name << "\n";
+                        std::cout << "skipping " << app_name << "\n";
                     }
                 }
             } else {
-                std::cout << "✅ " << p.name << " — " << p.mb << " MB\n";
+                std::cout << "✅ " << app_name << " — " << values[0] << " MB (" << values[1] << "processes)" << "\n";
             }
+
+            // if (counter == 20) {
+            //     break; 
+            // }
+
+            // counter ++; 
         }
 
         if (watch_mode) {
