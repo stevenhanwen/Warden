@@ -147,17 +147,22 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        // TODO: convert to a vector to sort by total mb for each app group. 
+        // TODO: convert to a vector to sort by total mb for each app group.
+        // Use pair data structure to hold the key and its value that is an array 
+        std::vector<std::pair<std::string, std::array<long, 2>>> apps_vec(app_groups_map.begin(), app_groups_map.end());
+        std::sort(apps_vec.begin(), apps_vec.end(), [](const auto& a, const auto& b) {
+            return a.second[0] > b.second[0];
+        });
 
 
         // print sorted processes
         // int counter = 0;
-        for (const auto& app_values : app_groups_map) {
+        for (const auto& app_values : apps_vec) {
             const std::string& app_name = app_values.first;
             const std::array<long, 2>& values = app_values.second;
 
             if (values[0] > limit) {
-                std::cout << "⚠️  " << app_name << " is using lots of memory: " << values[0] << " MB (" << values[1] << "processes)" << "\n";
+                std::cout << "⚠️  " << app_name << " is using lots of memory: " << values[0] << " MB (" << values[1] << " processes)" << "\n";
                 if (kill_mode) {
                     std::cout << "Are you sure you want to kill " << app_name << "? (y/n): ";
                     char confirm;
@@ -171,7 +176,7 @@ int main(int argc, char *argv[]) {
                     }
                 }
             } else {
-                std::cout << "✅ " << app_name << " — " << values[0] << " MB (" << values[1] << "processes)" << "\n";
+                std::cout << "✅ " << app_name << " — " << values[0] << " MB (" << values[1] << " processes)" << "\n";
             }
 
             // if (counter == 20) {

@@ -4,3 +4,10 @@ A small macOS command-line tool that scans running processes and flags ones usin
 
 > Work in progress.
 
+## Build and run
+
+```sh
+make
+make run
+make clean
+```
