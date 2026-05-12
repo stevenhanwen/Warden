@@ -8,7 +8,7 @@
 
 
 
-int main(int argc, char* argv[]) {
+int main() {
     initscr();
     noecho(); // doesnt print keypresses
     cbreak(); // makes keypresses instant without needing enter
@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     auto groups = group_processes(scan_processes(config.protected_processes));
 
     while (true) {
-        // Only scan every 5 seconds instead of every press of a key
+        // Only scan the processes every 5 seconds instead of every press of a key
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - last_refresh).count();
         if (elapsed >= 5) {
@@ -34,12 +34,36 @@ int main(int argc, char* argv[]) {
 
         clear(); // wipe the canvas
 
+        // calculate available rows
+        int header_rows = 2;
+        int footer_rows = 3;
+        int available_rows = LINES - header_rows - footer_rows;
+
+        // calculate scroll offset
+        // EX: You scrolled to index 6 of the available rows and there are 6 available rows, 
+        // The scroll_offset would be 1
+        int scroll_offset = 0;
+        if (selected >= available_rows) {
+            scroll_offset = selected - available_rows + 1;
+        }
+
+
         std::string line(COLS, '-');
         mvprintw(0, 0, "Warden - Select a Process:");
         mvprintw(1, 0, "%s", line.c_str());
 
         int app_index = 0; 
         for (const auto& app_values : groups) {
+            // This would skip indices of the groups until reaches scroll_offset
+            if (app_index < scroll_offset) {
+                app_index++;
+                continue;
+            }
+            // stop if we've filled the screen
+            // EX: 7th app would be the last to be shown if 6 available rows and scroll_offset = 1
+            if (app_index - scroll_offset >= available_rows) break;
+
+
             const std::string& app_name = app_values.first;
             const std::array<long, 2>& values = app_values.second;
 
@@ -52,19 +76,24 @@ int main(int argc, char* argv[]) {
                 line_text += " Warning, process group over configured limit";
             }
 
+            // EX: app_index is 1 (second app) and scroll_offset = 1
+            // 1 - 1 + 2 = 2 
+            int display_row = app_index - scroll_offset + header_rows;
+
             if (app_index == selected) {
                 attron(A_REVERSE);
-                mvprintw(app_index + 2, 0, line_text.c_str());
+                mvprintw(display_row, 0, "-> %s",line_text.c_str());
                 attroff(A_REVERSE);
             } else {
-                mvprintw(app_index + 2, 0, line_text.c_str());
+                mvprintw(display_row, 0, line_text.c_str());
             }
 
             app_index++; 
         }
 
-        mvprintw(groups.size() + 3, 0, "%s", line.c_str());
-        mvprintw(groups.size() + 4, 0, "[up/down] navigate  [q] quit");
+        mvprintw(LINES - 2, 0, "%s", line.c_str());
+        mvprintw(LINES - 1, 0, "[up/down] navigate  [k] kill  [q] quit");
+
 
         refresh(); // Prints to canvas
 
