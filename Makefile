@@ -14,7 +14,7 @@ DEPS := $(OBJECTS:.o=.d)
 all: $(BIN)
 
 $(BIN): $(OBJECTS)
-	$(CXX) $(OBJECTS) -o $@
+	$(CXX) $(OBJECTS) -o $@ -lncurses
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@

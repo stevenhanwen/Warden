@@ -16,5 +16,8 @@ struct AppGroup {
     int num_processes;
 };
 
+// Returns a vector of processes sorted
 std::vector<Process> scan_processes(const std::vector<std::string>& protected_processes);
+
+
 std::vector<std::pair<std::string, std::array<long, 2>>> group_processes(const std::vector<Process>& processes);
