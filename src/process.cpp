@@ -2,6 +2,8 @@
 #include <libproc.h>
 #include <algorithm>
 
+// Scans all processes and returns a vector of Process structs with their name, memory usage in MB, and PID
+// protected_processes is a list of process names that should be ignored/skipped in the scan 
 std::vector<Process> scan_processes(const std::vector<std::string>& protected_processes) {
     std::vector<Process> processes;
     int pids[1024];
@@ -40,6 +42,10 @@ std::vector<Process> scan_processes(const std::vector<std::string>& protected_pr
     return processes;
 }
 
+// Groups processes by their base name (removing any parenthesis and trailing spaces) and sums their memory 
+// usage and counts the number of processes in each group. 
+// Returns a vector of pairs where the first element is the app name and the second element is an array 
+// [total_mb, num_processes], sorted by total_mb in descending order.
 std::vector<std::pair<std::string, std::array<long, 2>>> group_processes(const std::vector<Process>& processes) {
     std::map<std::string, std::array<long, 2>> app_groups_map;
 
