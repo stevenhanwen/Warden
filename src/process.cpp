@@ -2,6 +2,54 @@
 #include <libproc.h>
 #include <algorithm>
 
+// Trimming function of a processs name to remove parenthesis or as a fallback later
+// EX: Process names can show up as Code Helper (Renderer) or Obsidian Helper (GPU), etc. 
+static std::string trim_process_name(const std::string& name) {
+    size_t paren = name.find('(');
+    std::string base_name = (paren == std::string::npos) ? name : name.substr(0, paren);
+    while (!base_name.empty() && base_name.back() == ' ') {
+        base_name.pop_back();
+    }
+    return base_name;
+}
+
+// Get the app name from the full file path of a running process executable.
+// This solves the issue of having two processes in the UI such as Claude and Claude Helper
+// EX of path: /Users/name/Applications/Obsidian.app/Contents/MacOS/Obsidian
+static std::string app_name_from_exe_path(const std::string& path) {
+    // Find the first occurrence of ".app" in the path
+    size_t app_pos = path.find(".app");
+    while (app_pos != std::string::npos) {
+        size_t after = app_pos + 4; // Position just after ".app"
+
+        // Check if ".app" is at the end of the string or followed by a '/'
+        if (after == path.size() || path[after] == '/') {
+            // Find the last '/' before the ".app" to get the start of the app name
+            size_t slash = path.rfind('/', app_pos);
+            // Ensure the slash is found and is before ".app"
+            if (slash != std::string::npos && slash + 1 < app_pos) {
+                // Extract the substring between the slash and ".app" (the app name)
+                return path.substr(slash + 1, app_pos - slash - 1);
+            }
+            break; // If not found, exit the loop
+        }
+        // Look for the next occurrence of ".app" in the path
+        app_pos = path.find(".app", app_pos + 4);
+    }
+    // Return empty string if no valid app name is found
+    return "";
+}
+
+std::string group_name_for_process(const Process& process) {
+    if (!process.exe_path.empty()) {
+        std::string app_name = app_name_from_exe_path(process.exe_path);
+        if (!app_name.empty()) {
+            return app_name;
+        }
+    }
+    return trim_process_name(process.name);
+}
+
 // Scans all processes and returns a vector of Process structs with their name, memory usage in MB, and PID
 // protected_processes is a list of process names that should be ignored/skipped in the scan 
 std::vector<Process> scan_processes(const std::vector<std::string>& protected_processes) {
@@ -29,7 +77,10 @@ std::vector<Process> scan_processes(const std::vector<std::string>& protected_pr
                     }
                 }
                 if (!is_protected) {
-                    processes.push_back({name, mb, pids[i]});
+                    char exe_path_buf[PROC_PIDPATHINFO_MAXSIZE];
+                    int path_len = proc_pidpath(pids[i], exe_path_buf, sizeof(exe_path_buf));
+                    std::string exe_path = (path_len > 0) ? std::string(exe_path_buf) : "";
+                    processes.push_back({name, mb, pids[i], exe_path});
                 }
             }
         }
@@ -42,7 +93,7 @@ std::vector<Process> scan_processes(const std::vector<std::string>& protected_pr
     return processes;
 }
 
-// Groups processes by their base name (removing any parenthesis and trailing spaces) and sums their memory 
+// Groups processes by their app name and sums their memory 
 // usage and counts the number of processes in each group. 
 // Returns a vector of pairs where the first element is the app name and the second element is an array 
 // [total_mb, num_processes], sorted by total_mb in descending order.
@@ -50,22 +101,10 @@ std::vector<std::pair<std::string, std::array<long, 2>>> group_processes(const s
     std::map<std::string, std::array<long, 2>> app_groups_map;
 
     // Let value be an array [a, b] where a is the total mb and b is the num_processes
-    // Clean each process name and check if it is in the map
+    // Clean each process name from its file path using group_name_for_process() 
+    // and check if it is in the map
     for (auto& p : processes) {
-        // Search for a parenthesis if there is one
-        size_t paren = p.name.find('(');
-        std::string base_name;
-
-        if (paren == std::string::npos) {
-            base_name = p.name; // no ( found, use full name
-        } else {
-            base_name = p.name.substr(0, paren); // cut at (
-        }
-
-        // trim trailing space
-        while (!base_name.empty() && base_name.back() == ' ') {
-            base_name.pop_back();
-        }
+        std::string base_name = group_name_for_process(p);
 
         if (app_groups_map.find(base_name) != app_groups_map.end()) {
             app_groups_map[base_name][0] += p.mb;
