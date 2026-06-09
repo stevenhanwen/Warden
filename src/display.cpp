@@ -8,7 +8,7 @@
 #include <chrono>
 
 int main()
-{
+{   
     initscr();
     noecho();             // doesnt print keypresses
     cbreak();             // makes keypresses instant without needing enter
@@ -38,9 +38,9 @@ int main()
         clear(); // wipe the canvas
 
         // calculate available rows
-        int header_rows = 2;
-        int footer_rows = 3;
-        int available_rows = LINES - header_rows - footer_rows;
+        const int HEADER_ROWS = 3;
+        const int FOOTER_ROWS = 4;
+        int available_rows = LINES - HEADER_ROWS - FOOTER_ROWS;
 
         // calculate scroll offset
         // Only scroll when selected moves outside the visible window
@@ -56,8 +56,9 @@ int main()
         }
 
         std::string line(COLS, '-');
-        mvprintw(0, 0, "Warden - Select a Process:");
-        mvprintw(1, 0, "%s", line.c_str());
+        mvprintw(0, 0, "Number of Running Procceses: %d", static_cast<int>(groups.size()));
+        mvprintw(1, 0, "Warden - Select a Process:");
+        mvprintw(2, 0, "%s", line.c_str());
 
         int app_index = 0;
 
@@ -93,13 +94,14 @@ int main()
 
             // EX: app_index is 1 (second app) and scroll_offset = 1
             // 1 - 1 + 2 = 2
-            int display_row = app_index - scroll_offset + header_rows;
+            int display_row = app_index - scroll_offset + HEADER_ROWS;
 
             if (app_index == selected)
             {
                 attron(A_REVERSE);
                 mvprintw(display_row, 0, "-> %s", line_text.c_str());
                 attroff(A_REVERSE);
+                mvprintw(LINES - 3, 0, "Currently Selected Process: %s", app_name.c_str());
             }
             else
             {
@@ -107,6 +109,8 @@ int main()
             }
             app_index++;
         }
+
+        mvprintw(LINES - FOOTER_ROWS, 0, "%s", line.c_str());
 
         mvprintw(LINES - 2, 0, "%s", line.c_str());
         mvprintw(LINES - 1, 0, "[up/down] navigate  [k] kill  [q] quit");
