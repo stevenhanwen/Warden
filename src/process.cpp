@@ -94,10 +94,15 @@ std::vector<Process> scan_processes(const std::vector<std::string> &protected_pr
                     }
                 }
                 if (!is_protected)
-                {
+                {   
+                    // Allocate a fixed-size buffer on the stack, 
+                    // sized to the macOS constant for the maximum process path length.
                     char exe_path_buf[PROC_PIDPATHINFO_MAXSIZE];
                     int path_len = proc_pidpath(pids[i], exe_path_buf, sizeof(exe_path_buf));
+
+                    // Converts buffer to a string if possible
                     std::string exe_path = (path_len > 0) ? std::string(exe_path_buf) : "";
+                    // Append a Process with the process name, memory usage (in MB), PID, and executable path
                     processes.push_back({name, mb, pids[i], exe_path});
                 }
             }
