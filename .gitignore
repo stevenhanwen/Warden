@@ -12,6 +12,9 @@ warden
 # macOS
 .DS_Store
 
+# Formatting configs
+.clang-format
+
 # Editor / IDE
 .vscode/
 .idea/
