@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+using ProcessGroup = std::vector<std::pair<std::string, std::array<long, 2>>>;
+
 struct Process {
   std::string name;
   long mb;
@@ -32,7 +34,7 @@ group_name_for_process(const Process &process);
 // Returns a vector of pairs where the first element is the app name and the
 // second element is an array [total_mb, num_processes], sorted by total_mb in
 // descending order.
-std::vector<std::pair<std::string, std::array<long, 2>>>
+ProcessGroup
 group_processes(const std::vector<Process> &processes);
 
 // A function that takes in the vector of groups processes
@@ -40,6 +42,6 @@ group_processes(const std::vector<Process> &processes);
 // RETURNS: vector of pair<std::string, std::array<long, 2>>
 // in sorted order such that the earlier the search string appears
 // (the index of position), the earlier in the vector it will be.
-std::vector<std::pair<std::string, std::array<long, 2>>>
+ProcessGroup
 search_processes(std::string &search,
                  std::vector<std::pair<std::string, std::array<long, 2>>> &groups);
