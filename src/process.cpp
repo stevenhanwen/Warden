@@ -1,6 +1,7 @@
 #include "process.h"
 #include <algorithm>
 #include <libproc.h>
+#include <unordered_map>
 
 // Trimming function of a processs name to remove parenthesis or as a fallback
 // later EX: Process names can show up as Code Helper (Renderer) or Obsidian
@@ -109,12 +110,7 @@ scan_processes(const std::vector<std::string> &protected_processes) {
   return processes;
 }
 
-// Groups processes by their app name and sums their memory
-// usage and counts the number of processes in each group.
-// Returns a vector of pairs where the first element is the app name and the
-// second element is an array [total_mb, num_processes], sorted by total_mb in
-// descending order.
-std::vector<std::pair<std::string, std::array<long, 2>>>
+ProcessGroup
 group_processes(const std::vector<Process> &processes) {
   std::map<std::string, std::array<long, 2>> app_groups_map;
 
@@ -142,11 +138,42 @@ group_processes(const std::vector<Process> &processes) {
   return apps_vector;
 }
 
-std::vector<std::pair<std::string, std::array<long, 2>>>
+ProcessGroup
 search_processes(std::string &search,
-                 std::vector<std::pair<std::string, std::array<long, 2>>> &groups) {
-  for (auto &p : groups) {
+                 const std::vector<std::pair<std::string, std::array<long, 2>>> &groups) {
+  std::vector<std::pair<std::string, std::array<long, 2>>> result;
+
+  // Use a unordered_map to quickly search the group name and see its position index
+  std::unordered_map<std::string, int> group_search_map;
+
+  for (const auto &group : groups) {
+    size_t position = group.first.find(search);
+    if (position == std::string::npos) {
+      continue;
+    }
+
+    group_search_map[group.first] = position;
+
+    // Just insert the group if result is empty
+    if (result.empty()) {
+      result.push_back(group);
+    } else if (position >= group_search_map[result.at(result.size() - 1).first]) {
+      // Push back to the end if it is greatest
+      result.push_back(group);
+    }
+
+    // Need to place the current group in the correct order.
+    // Move through the result vector to place the group based on start
+    // of where the substring is found inside the group name.
+    // Essentially a insertion sort algorithm.
+    for (size_t i = 0; i < result.size(); ++i) {
+      size_t curr_pos = group_search_map[result.at(i).first];
+      if (position <= curr_pos) {
+        result.insert(result.begin() + i, group);
+        break;
+      }
+    }
   }
 
-  return;
+  return result;
 }
