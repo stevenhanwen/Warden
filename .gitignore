@@ -8,12 +8,14 @@ build/
 main
 proclist
 warden
+test_runner
 
 # macOS
 .DS_Store
 
-# Formatting configs
+# Formatting and compile flag configs
 .clang-format
+compile_flags.txt
 
 # Editor / IDE
 .vscode/
