@@ -1,5 +1,5 @@
 CXX ?= clang++
-CXXFLAGS ?= -std=c++17 -Wall -Wextra -Wpedantic -Isrc
+CXXFLAGS ?= -std=c++17 -Wall -Wextra -Wpedantic -Isrc -I/opt/homebrew/opt/googletest/include
 
 SRC_DIR := src
 BUILD_DIR := build
@@ -25,10 +25,10 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
 $(BUILD_DIR)/tests/%.o: tests/%.cpp | $(BUILD_DIR)/tests
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+	
 $(TEST_BIN): $(TEST_OBJS) $(LIB_OBJS)
-	$(CXX) $^ -o $@
+	$(CXX) $^ -o $@ -L/opt/homebrew/opt/googletest/lib -lgtest -lgtest_main -pthread
 
 $(BUILD_DIR):
 	mkdir -p $@
