@@ -15,7 +15,9 @@ test_runner
 
 # Formatting and compile flag configs
 .clang-format
+.clangd
 compile_flags.txt
+compile_commands.json
 
 # Editor / IDE
 .vscode/

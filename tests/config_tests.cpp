@@ -1,4 +1,10 @@
 #include "config.h"
 #include <gtest/gtest.h>
 
-TEST(ExampleTest, OnePlusOne) { EXPECT_EQ(1 + 1, 2); }
+// Demonstrate some basic assertions.
+TEST(HelloTest, BasicAssertions) {
+  // Expect two strings not to be equal.
+  EXPECT_STRNE("hello", "world");
+  // Expect equality.
+  EXPECT_EQ(7 * 6, 42);
+}
