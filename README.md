@@ -11,10 +11,26 @@ Warden is a macOS command-line tool that scans running processes and automatical
 
 > More extensive work is in progress.
 
-## Build and run
+## Build and run (CMake)
 
 ```sh
-make
-make run
-make clean
+# Re-run this only if you change CMakeLists.txt
+cmake -S . -B build
+
+cmake --build build
+./build/warden
+```
+
+## Run tests (GoogleTest + CTest)
+
+```sh
+# Configure/build (if not already done)
+cmake -S . -B build
+cmake --build build
+
+# Run all discovered tests
+ctest --test-dir build --output-on-failure
+
+# Optional: run the test binary directly
+./build/warden_tests
 ```
