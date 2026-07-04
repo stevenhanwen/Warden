@@ -8,5 +8,4 @@ struct Config {
 };
 
 // Takes a file .conf file path and reads for memory limits and protected processes.
-Config
-load_config(const std::string &path);
+Config load_config(const std::string &path);

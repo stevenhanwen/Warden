@@ -38,6 +38,12 @@ if(BUILD_TESTING)
     tests/kill_utils_tests.cpp
   )
   target_link_libraries(warden_tests PRIVATE warden_core GTest::gtest_main)
+  target_compile_definitions(warden_tests PRIVATE
+    TEST_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/example_files"
+  )
+
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/tests/example_files
+       DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
   include(GoogleTest)
   gtest_discover_tests(warden_tests)
