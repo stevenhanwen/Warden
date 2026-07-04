@@ -1,13 +1,13 @@
 #include "process.h"
 #include <algorithm>
 #include <libproc.h>
+#include <map>
 #include <unordered_map>
 
 // Trimming function of a processs name to remove parenthesis or as a fallback
 // later EX: Process names can show up as Code Helper (Renderer) or Obsidian
 // Helper (GPU), etc.
-static std::string
-trim_process_name(const std::string &name) {
+static std::string trim_process_name(const std::string &name) {
   size_t paren = name.find('(');
   std::string base_name = (paren == std::string::npos) ? name : name.substr(0, paren);
   while (!base_name.empty() && base_name.back() == ' ') {
@@ -22,8 +22,7 @@ trim_process_name(const std::string &name) {
 // /Users/name/Applications/Obsidian.app/Contents/MacOS/Obsidian Note: Need to
 // get the first occurance of a app bundle, to get the overal application bundle
 // Sometimes there can contain another app bundle within the larger app itself.
-static std::string
-app_name_from_exe_path(const std::string &path) {
+static std::string app_name_from_exe_path(const std::string &path) {
   // Find the first occurrence of ".app" in the path
   size_t app_pos = path.find(".app");
   while (app_pos != std::string::npos) {
@@ -46,8 +45,7 @@ app_name_from_exe_path(const std::string &path) {
   return "";
 }
 
-std::string
-group_name_for_process(const Process &process) {
+std::string group_name_for_process(const Process &process) {
   if (!process.exe_path.empty()) {
     std::string app_name = app_name_from_exe_path(process.exe_path);
     if (!app_name.empty()) {
@@ -62,8 +60,7 @@ group_name_for_process(const Process &process) {
 // Scans all processes and returns a vector of Process structs with their name,
 // memory usage in MB, and PID protected_processes is a list of process names
 // that should be ignored/skipped in the scan
-std::vector<Process>
-scan_processes(const std::vector<std::string> &protected_processes) {
+std::vector<Process> scan_processes(const std::vector<std::string> &protected_processes) {
   std::vector<Process> processes;
   int pids[1024];
   int count = proc_listallpids(pids, sizeof(pids));
@@ -110,8 +107,7 @@ scan_processes(const std::vector<std::string> &protected_processes) {
   return processes;
 }
 
-ProcessGroup
-group_processes(const std::vector<Process> &processes) {
+ProcessGroup group_processes(const std::vector<Process> &processes) {
   std::map<std::string, std::array<long, 2>> app_groups_map;
 
   // Let value be an array [a, b] where a is the total mb and b is the
