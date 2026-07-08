@@ -2,12 +2,10 @@
 #include <algorithm>
 #include <libproc.h>
 #include <map>
+#include <string>
 #include <unordered_map>
 
-// Trimming function of a processs name to remove parenthesis or as a fallback
-// later EX: Process names can show up as Code Helper (Renderer) or Obsidian
-// Helper (GPU), etc.
-static std::string trim_process_name(const std::string &name) {
+std::string trim_process_name(const std::string &name) {
   size_t paren = name.find('(');
   std::string base_name = (paren == std::string::npos) ? name : name.substr(0, paren);
   while (!base_name.empty() && base_name.back() == ' ') {
@@ -16,13 +14,7 @@ static std::string trim_process_name(const std::string &name) {
   return base_name;
 }
 
-// Get the app name from the full file path of a running process executable.
-// This solves the issue of having two processes in the UI such as Claude and
-// Claude Helper EX of path:
-// /Users/name/Applications/Obsidian.app/Contents/MacOS/Obsidian Note: Need to
-// get the first occurance of a app bundle, to get the overal application bundle
-// Sometimes there can contain another app bundle within the larger app itself.
-static std::string app_name_from_exe_path(const std::string &path) {
+std::string app_name_from_exe_path(const std::string &path) {
   // Find the first occurrence of ".app" in the path
   size_t app_pos = path.find(".app");
   while (app_pos != std::string::npos) {

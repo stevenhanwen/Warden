@@ -18,6 +18,18 @@ struct AppGroup {
   int num_processes;
 };
 
+// Trimming function of a processs name to remove parenthesis or as a fallback later
+// EX: Process names can show up as Code Helper (Renderer) or Obsidian Helper (GPU), etc.
+std::string trim_process_name(const std::string &name);
+
+// Get the app name from the full file path of a running process executable.
+// This solves the issue of having two processes in the UI such as Claude and
+// Claude Helper EX of path:
+// /Users/name/Applications/Obsidian.app/Contents/MacOS/Obsidian Note: Need to
+// get the first occurance of a app bundle, to get the overal application bundle
+// Sometimes there can contain another app bundle within the larger app itself.
+std::string app_name_from_exe_path(const std::string &path);
+
 // Returns a vector of processes sorted
 // Excludes processes which are protected, so they cannot be deleted.
 std::vector<Process> scan_processes(const std::vector<std::string> &protected_processes);

@@ -1,7 +1,5 @@
 #include "kill_utils.h"
-
 #include <gtest/gtest.h>
-
 #include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
