@@ -50,5 +50,4 @@ ProcessGroup group_processes(const std::vector<Process> &processes);
 // RETURNS: vector of pair<std::string, std::array<long, 2>>
 // in sorted order such that the earlier the search string appears
 // (the index of position), the earlier in the vector it will be.
-ProcessGroup search_processes(std::string &search,
-                              std::vector<std::pair<std::string, std::array<long, 2>>> &groups);
+ProcessGroup search_processes(std::string &search, const ProcessGroup &groups);

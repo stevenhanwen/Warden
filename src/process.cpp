@@ -126,10 +126,9 @@ ProcessGroup group_processes(const std::vector<Process> &processes) {
   return apps_vector;
 }
 
-ProcessGroup
-search_processes(std::string &search,
-                 const std::vector<std::pair<std::string, std::array<long, 2>>> &groups) {
-  std::vector<std::pair<std::string, std::array<long, 2>>> result;
+// POTENTIAL TO REFACTOR THIS USING A PRIORITY QUEUE
+ProcessGroup search_processes(std::string &search, const ProcessGroup &groups) {
+  ProcessGroup result;
 
   // Use a unordered_map to quickly search the group name and see its position index
   std::unordered_map<std::string, int> group_search_map;

@@ -21,3 +21,10 @@ TEST(TestTrimProcessName, TestRegularTrim) {
   trimmed_name = trim_process_name(name_without_space);
   EXPECT_EQ(trimmed_name, "Obsidian");
 }
+
+TEST(TestSearchProcessGroup, TestEmpty) {
+  ProcessGroup empty;
+  std::string empty_string = "";
+  ProcessGroup result = search_processes(empty_string, empty);
+  EXPECT_EQ(result, empty);
+}
