@@ -1,6 +1,6 @@
 # Warden (macOS)
 
-Warden is a macOS command-line tool that scans running processes and automatically groups them based on appliciations, rather than the standard activity monitor, which can show many ambiguous processes. This tool directly indicates the number of processes and total memory usage for each application, allowing a user to quickly identify what is consuming the most resources. 
+Warden is a macOS command-line tool that scans running processes and automatically groups them based on appliciations, rather than the standard activity monitor, which can show many ambiguous processes. This tool directly indicates the number of processes and total memory usage for each application, allowing a user to quickly identify what is consuming the most resources. In addition, users get a much quicker and efficient experience terminating processes compared to using a GUI.
 
 ## Features
 
