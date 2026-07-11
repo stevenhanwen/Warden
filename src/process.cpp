@@ -139,6 +139,13 @@ ProcessGroup search_processes(std::string &search, const ProcessGroup &groups) {
       continue;
     }
 
+    // CHANGE WILL BE MADE WIHTIN THESE LINES
+    ///////////////////////////////////////////////
+    // First push back all the elements, then heapfiy the vector.
+    // Have to create a custom comparator first.
+    // Should improve time complexity to just O(n).
+    ///////////////////////////////////////////////
+
     group_search_map[group.first] = position;
 
     // Just insert the group if result is empty
