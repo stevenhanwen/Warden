@@ -23,8 +23,8 @@ TEST(TestTrimProcessName, TestRegularTrim) {
 }
 
 TEST(TestSearchProcessGroup, TestEmpty) {
-  ProcessGroup empty;
+  ProcessGroupVec empty;
   std::string empty_string = "";
-  ProcessGroup result = search_processes(empty_string, empty);
+  ProcessGroupVec result = search_processes(empty_string, empty);
   EXPECT_EQ(result, empty);
 }
