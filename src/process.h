@@ -47,7 +47,8 @@ std::string group_name_for_process(const Process &process);
 ProcessGroupVec group_processes(const std::vector<Process> &processes);
 
 // A function that takes in the vector of groups processes
-// and searches for any processes that begins with the substring
+// and searches for any processes that begins with the substring.
+// This should also be case insensitive.
 // RETURNS: vector of pair<std::string, std::array<long, 2>>
 // in sorted order such that the earlier the search string appears
 // (the index of position), the earlier in the vector it will be.

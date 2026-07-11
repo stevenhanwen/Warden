@@ -1,8 +1,8 @@
 #include "process.h"
 #include <algorithm>
+#include <cctype>
 #include <libproc.h>
 #include <map>
-#include <string>
 #include <unordered_map>
 
 std::string trim_process_name(const std::string &name) {
@@ -125,30 +125,29 @@ ProcessGroupVec group_processes(const std::vector<Process> &processes) {
   return apps_vector;
 }
 
-// POTENTIAL TO REFACTOR THIS USING A PRIORITY QUEUE
 ProcessGroupVec search_processes(std::string &search, const ProcessGroupVec &groups) {
   ProcessGroupVec result;
 
   // Use a unordered_map to quickly search the group name and see its position index
   std::unordered_map<std::string, int> group_search_map;
+  // Convert to lowercase for search keyword
+  std::transform(search.begin(), search.end(), search.begin(),
+                 [](unsigned char c) { return std::tolower(c); });
 
   for (const auto &group : groups) {
-    size_t position = group.first.find(search);
+    std::string name = group.first;
+    std::transform(name.begin(), name.end(), name.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+
+    size_t position = name.find(search);
     if (position == std::string::npos) {
       continue;
     }
 
-    // CHANGE WILL BE MADE WIHTIN THESE LINES
-    ///////////////////////////////////////////////
     // First push back all the elements, then heapfiy the vector.
-    // Have to create a custom comparator first.
     // Should improve time complexity to just O(n).
     group_search_map[group.first] = position;
     result.push_back(group);
-
-    ///////////////////////////////////////////////
-
-    group_search_map[group.first] = position;
   }
 
   std::make_heap(result.begin(), result.end(),
