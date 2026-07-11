@@ -99,7 +99,7 @@ std::vector<Process> scan_processes(const std::vector<std::string> &protected_pr
   return processes;
 }
 
-ProcessGroup group_processes(const std::vector<Process> &processes) {
+ProcessGroupVec group_processes(const std::vector<Process> &processes) {
   std::map<std::string, std::array<long, 2>> app_groups_map;
 
   // Let value be an array [a, b] where a is the total mb and b is the
@@ -118,8 +118,7 @@ ProcessGroup group_processes(const std::vector<Process> &processes) {
 
   // convert to a vector to sort by total mb for each app group.
   // Use pair data structure to hold the key and its value that is an array
-  std::vector<std::pair<std::string, std::array<long, 2>>> apps_vector(app_groups_map.begin(),
-                                                                       app_groups_map.end());
+  ProcessGroupVec apps_vector(app_groups_map.begin(), app_groups_map.end());
   std::sort(apps_vector.begin(), apps_vector.end(),
             [](const auto &a, const auto &b) { return a.second[0] > b.second[0]; });
 
@@ -127,8 +126,8 @@ ProcessGroup group_processes(const std::vector<Process> &processes) {
 }
 
 // POTENTIAL TO REFACTOR THIS USING A PRIORITY QUEUE
-ProcessGroup search_processes(std::string &search, const ProcessGroup &groups) {
-  ProcessGroup result;
+ProcessGroupVec search_processes(std::string &search, const ProcessGroupVec &groups) {
+  ProcessGroupVec result;
 
   // Use a unordered_map to quickly search the group name and see its position index
   std::unordered_map<std::string, int> group_search_map;
@@ -144,30 +143,18 @@ ProcessGroup search_processes(std::string &search, const ProcessGroup &groups) {
     // First push back all the elements, then heapfiy the vector.
     // Have to create a custom comparator first.
     // Should improve time complexity to just O(n).
+    group_search_map[group.first] = position;
+    result.push_back(group);
+
     ///////////////////////////////////////////////
 
     group_search_map[group.first] = position;
-
-    // Just insert the group if result is empty
-    if (result.empty()) {
-      result.push_back(group);
-    } else if (position >= group_search_map[result.at(result.size() - 1).first]) {
-      // Push back to the end if it is greatest
-      result.push_back(group);
-    }
-
-    // Need to place the current group in the correct order.
-    // Move through the result vector to place the group based on start
-    // of where the substring is found inside the group name.
-    // Essentially a insertion sort algorithm.
-    for (size_t i = 0; i < result.size(); ++i) {
-      size_t curr_pos = group_search_map[result.at(i).first];
-      if (position <= curr_pos) {
-        result.insert(result.begin() + i, group);
-        break;
-      }
-    }
   }
+
+  std::make_heap(result.begin(), result.end(),
+                 [&group_search_map](const ProcessGroup &a, const ProcessGroup &b) {
+                   return group_search_map[a.first] < group_search_map[b.first];
+                 });
 
   return result;
 }
