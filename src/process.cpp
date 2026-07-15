@@ -5,6 +5,14 @@
 #include <map>
 #include <unordered_map>
 
+bool AppGroup::operator==(const AppGroup &other) const {
+  if (other.name == name && other.total_mb == total_mb && other.num_processes == num_processes) {
+    return true;
+  }
+
+  return false;
+}
+
 std::string trim_process_name(const std::string &name) {
   size_t paren = name.find('(');
   std::string base_name = (paren == std::string::npos) ? name : name.substr(0, paren);
@@ -100,27 +108,29 @@ std::vector<Process> scan_processes(const std::vector<std::string> &protected_pr
 }
 
 ProcessGroupVec group_processes(const std::vector<Process> &processes) {
-  std::map<std::string, std::array<long, 2>> app_groups_map;
+  std::map<std::string, AppGroup> app_groups_map;
 
-  // Let value be an array [a, b] where a is the total mb and b is the
-  // num_processes Clean each process name from its file path using
+  // Clean each process name from its file path using
   // group_name_for_process() and check if it is in the map
   for (auto &p : processes) {
     std::string base_name = group_name_for_process(p);
 
     if (app_groups_map.find(base_name) != app_groups_map.end()) {
-      app_groups_map[base_name][0] += p.mb;
-      app_groups_map[base_name][1] += 1;
+      app_groups_map[base_name].total_mb += p.mb;
+      app_groups_map[base_name].num_processes += 1;
     } else {
-      app_groups_map.insert({base_name, {p.mb, 1}});
+      AppGroup app = {base_name, p.mb, 1};
+      app_groups_map[base_name] = app;
     }
   }
 
-  // convert to a vector to sort by total mb for each app group.
-  // Use pair data structure to hold the key and its value that is an array
-  ProcessGroupVec apps_vector(app_groups_map.begin(), app_groups_map.end());
+  ProcessGroupVec apps_vector;
+  for (auto &group_pair : app_groups_map) {
+    apps_vector.push_back(group_pair.second);
+  }
+
   std::sort(apps_vector.begin(), apps_vector.end(),
-            [](const auto &a, const auto &b) { return a.second[0] > b.second[0]; });
+            [](const auto &a, const auto &b) { return a.total_mb > b.total_mb; });
 
   return apps_vector;
 }
@@ -135,24 +145,27 @@ ProcessGroupVec search_processes(std::string &search, const ProcessGroupVec &gro
                  [](unsigned char c) { return std::tolower(c); });
 
   for (const auto &group : groups) {
-    std::string name = group.first;
+    std::string name = group.name;
+    // Turn to lowercase for case insensitivity
     std::transform(name.begin(), name.end(), name.begin(),
                    [](unsigned char c) { return std::tolower(c); });
 
     size_t position = name.find(search);
+    // If search is not found, then don't add to the result
     if (position == std::string::npos) {
       continue;
     }
 
     // First push back all the elements, then heapfiy the vector.
     // Should improve time complexity to just O(n).
-    group_search_map[group.first] = position;
+    group_search_map[group.name] = position;
     result.push_back(group);
   }
 
+  // Comparing the
   std::make_heap(result.begin(), result.end(),
-                 [&group_search_map](const ProcessGroup &a, const ProcessGroup &b) {
-                   return group_search_map[a.first] < group_search_map[b.first];
+                 [&group_search_map](const AppGroup &a, const AppGroup &b) {
+                   return group_search_map[a.name] < group_search_map[b.name];
                  });
 
   return result;
