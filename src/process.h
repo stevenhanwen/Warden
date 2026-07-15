@@ -1,10 +1,6 @@
 #pragma once
-#include <array>
 #include <string>
 #include <vector>
-
-using ProcessGroup = std::pair<std::string, std::array<long, 2>>;
-using ProcessGroupVec = std::vector<ProcessGroup>;
 
 struct Process {
   std::string name;
@@ -17,7 +13,11 @@ struct AppGroup {
   std::string name;
   long total_mb;
   int num_processes;
+
+  bool operator==(const AppGroup &other) const;
 };
+
+using ProcessGroupVec = std::vector<AppGroup>;
 
 // Trimming function of a processs name to remove parenthesis or as a fallback later
 // EX: Process names can show up as Code Helper (Renderer) or Obsidian Helper (GPU), etc.

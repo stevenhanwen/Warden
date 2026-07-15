@@ -32,12 +32,13 @@ TEST(TestSearchProcessGroup, TestEmpty) {
 
 TEST(TestSearchProcessGroup, TestRegularSearch) {
   ProcessGroupVec app_groups;
-  app_groups.push_back({"Claude", {100, 5}});
-  app_groups.push_back({"Google", {50, 3}});
-  app_groups.push_back({"GitHub", {200, 7}});
-  app_groups.push_back({"Neovim", {25, 1}});
+  app_groups.push_back({"Claude", 100, 5});
+  app_groups.push_back({"Google", 50, 3});
+  app_groups.push_back({"GitHub", 200, 7});
+  app_groups.push_back({"Neovim", 25, 1});
 
   std::string search_term = "Cl";
   ProcessGroupVec result = search_processes(search_term, app_groups);
-  ProcessGroupVec expected = {{"Claude", {100, 5}}};
+  ProcessGroupVec expected = {{"Claude", 100, 5}};
+  EXPECT_EQ(result, expected);
 }
