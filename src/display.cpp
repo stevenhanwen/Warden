@@ -5,6 +5,81 @@
 #include <ncurses.h>
 #include <unistd.h>
 
+void display_processes(const int header_rows, const int footer_rows, const int selected,
+                       const int limit, const ProcessGroupVec &groups) {
+  // calculate available rows
+  const int HEADER_ROWS = header_rows;
+  const int FOOTER_ROWS = footer_rows;
+  int available_rows = LINES - HEADER_ROWS - FOOTER_ROWS;
+
+  // calculate scroll offset
+  // Only scroll when selected moves outside the visible window
+  int scroll_offset = 0;
+
+  int app_index = 0;
+
+  if (selected < scroll_offset) {
+    scroll_offset = selected;
+  } else if (selected >= scroll_offset + available_rows) {
+    scroll_offset = selected - available_rows + 1;
+  }
+
+  for (const auto &app_values : groups) {
+
+    // This would skip indices of the groups until reaches scroll_offset
+
+    if (app_index < scroll_offset) {
+      app_index++;
+      continue;
+    }
+    // stop if we've filled the screen
+    // EX: 7th app would be the last to be shown if 6 available rows and scroll_offset = 1
+
+    if (app_index - scroll_offset >= available_rows) {
+      break;
+    }
+
+    const std::string &app_name = app_values.name;
+    const long &total_mb = app_values.total_mb;
+    const int &num_processes = app_values.num_processes;
+
+    std::string line_text = app_name + " " + std::to_string(total_mb) + " MB (" +
+                            std::to_string(num_processes) + " processes)";
+
+    if (total_mb > limit) {
+      line_text += " Warning, process group over configured limit";
+    }
+
+    // EX: app_index is 1 (second app) and scroll_offset = 1
+    // 1 - 1 + 2 = 2
+    int display_row = app_index - scroll_offset + HEADER_ROWS;
+
+    if (app_index == selected) {
+      attron(A_REVERSE);
+      mvprintw(display_row, 0, "-> %s", line_text.c_str());
+      attroff(A_REVERSE);
+      mvprintw(LINES - 3, 0, "Currently Selected Process: %s", app_name.c_str());
+    } else {
+      mvprintw(display_row, 0, line_text.c_str());
+    }
+    app_index++;
+  }
+}
+
+// void search_display(const int limit, const ProcessGroupVec &groups) {
+//   clear()
+//   const int header_rows = 5;
+//   const int footer_rows = 4;
+//   mvprintw(0, 0, "Search Mode");
+//   mvprintw(1, 0, "Begin typing the name of the process you want to view");
+//   mvprintw(2, 0, "%s", line.c_str());
+//   mvprintw(4, 0, "%s", line.c_str());
+//
+//   int selected = 0;
+//
+//   display_processes(header_rows, footer_rows, selected, limit, groups);
+// }
+
 int main() {
   initscr();
   noecho();             // doesnt print keypresses
@@ -32,73 +107,20 @@ int main() {
 
     clear(); // wipe the canvas
 
-    // calculate available rows
-    const int HEADER_ROWS = 3;
-    const int FOOTER_ROWS = 4;
-    int available_rows = LINES - HEADER_ROWS - FOOTER_ROWS;
-
-    // calculate scroll offset
-    // Only scroll when selected moves outside the visible window
-    static int scroll_offset = 0;
-
-    if (selected < scroll_offset) {
-      scroll_offset = selected;
-    } else if (selected >= scroll_offset + available_rows) {
-      scroll_offset = selected - available_rows + 1;
-    }
-
     std::string line(COLS, '-');
     mvprintw(0, 0, "Number of Running Procceses: %d", static_cast<int>(groups.size()));
     mvprintw(1, 0, "Warden - Select a Process:");
     mvprintw(2, 0, "%s", line.c_str());
 
-    int app_index = 0;
+    int header_rows = 3;
+    int footer_rows = 4;
 
-    for (const auto &app_values : groups) {
+    display_processes(header_rows, footer_rows, selected, limit, groups);
 
-      // This would skip indices of the groups until reaches scroll_offset
-
-      if (app_index < scroll_offset) {
-        app_index++;
-        continue;
-      }
-      // stop if we've filled the screen
-      // EX: 7th app would be the last to be shown if 6 available rows and scroll_offset = 1
-
-      if (app_index - scroll_offset >= available_rows) {
-        break;
-      }
-
-      const std::string &app_name = app_values.name;
-      const long &total_mb = app_values.total_mb;
-      const int &num_processes = app_values.num_processes;
-
-      std::string line_text = app_name + " " + std::to_string(total_mb) + " MB (" +
-                              std::to_string(num_processes) + " processes)";
-
-      if (total_mb > limit) {
-        line_text += " Warning, process group over configured limit";
-      }
-
-      // EX: app_index is 1 (second app) and scroll_offset = 1
-      // 1 - 1 + 2 = 2
-      int display_row = app_index - scroll_offset + HEADER_ROWS;
-
-      if (app_index == selected) {
-        attron(A_REVERSE);
-        mvprintw(display_row, 0, "-> %s", line_text.c_str());
-        attroff(A_REVERSE);
-        mvprintw(LINES - 3, 0, "Currently Selected Process: %s", app_name.c_str());
-      } else {
-        mvprintw(display_row, 0, line_text.c_str());
-      }
-      app_index++;
-    }
-
-    mvprintw(LINES - FOOTER_ROWS, 0, "%s", line.c_str());
+    mvprintw(LINES - footer_rows, 0, "%s", line.c_str());
 
     mvprintw(LINES - 2, 0, "%s", line.c_str());
-    mvprintw(LINES - 1, 0, "[up/down] navigate  [k] kill  [q] quit");
+    mvprintw(LINES - 1, 0, "[up/down] navigate  [s]search  [k] kill  [q] quit");
 
     refresh(); // Prints to canvas
 
@@ -115,7 +137,6 @@ int main() {
     }
 
     // Confirmation prompt for kill action
-
     if (key == 'k') {
       // Show confirmation prompt
       mvprintw(LINES - 3, 0, "Are you sure you want to kill this group? (y/n) ");
