@@ -67,6 +67,31 @@ void display_processes(const int header_rows, const int footer_rows, const int s
   }
 }
 
+bool kill_group_display(const std::string &group_name,
+                        const std::vector<Process> &protected_processes) {
+  bool killed = false;
+  // Show confirmation prompt
+  mvprintw(LINES - 3, 0, "Are you sure you want to kill this group? (y/n) ");
+  refresh();
+  // Set getch to blocking mode
+  timeout(-1);
+  int confirm = getch();
+  // Restore timeout to 100ms
+  timeout(100);
+
+  mvprintw(LINES - 3, 0, "%*s", COLS, ""); // Overwrite old text with spaces
+  if (confirm == 'y' || confirm == 'Y') {
+    kill_process_group(group_name, protected_processes);
+    mvprintw(LINES - 3, 0, "Process group killed!");
+    killed = true;
+  } else {
+    mvprintw(LINES - 3, 0, "Kill cancelled.");
+  }
+  refresh();
+
+  return killed;
+}
+
 void search_display(const int limit) {
   clear();
   const int header_rows = 5;
@@ -165,28 +190,13 @@ void search_display(const int limit) {
     if (mode == "kill") {
       // Confirmation prompt for kill action
       if (key == 'k') {
-        // Show confirmation prompt
-        mvprintw(LINES - 3, 0, "Are you sure you want to kill this group? (y/n) ");
-        refresh();
-        // Set getch to blocking mode
-        timeout(-1);
-        int confirm = getch();
-        // Restore timeout to 100ms
-        timeout(100);
-
-        mvprintw(LINES - 3, 0, "%*s", COLS, ""); // Overwrite old text with spaces
-        if (confirm == 'y' || confirm == 'Y') {
-          kill_process_group(local_groups[selected].name,
-                             scan_processes(config.protected_processes));
-          mvprintw(LINES - 3, 0, "Process group killed!");
+        bool killed = kill_group_display(local_groups[selected].name,
+                                         scan_processes(config.protected_processes));
+        if (killed) {
           // Rescan immediately after a kill so the list reflects it right away
           local_groups = group_processes(scan_processes(config.protected_processes));
           last_refresh = std::chrono::steady_clock::now();
-        } else {
-          mvprintw(LINES - 3, 0, "Kill cancelled.");
         }
-        refresh();
-
         // Set mode back to search once deleted
         mode = "search";
         // Wait briefly so user can see the result
@@ -262,27 +272,18 @@ int main() {
 
     // Confirmation prompt for kill action
     if (key == 'k') {
-      // Show confirmation prompt
-      mvprintw(LINES - 3, 0, "Are you sure you want to kill this group? (y/n) ");
-      refresh();
-      // Set getch to blocking mode
-      timeout(-1);
-      int confirm = getch();
-      // Restore timeout to 100ms
-      timeout(100);
-
-      mvprintw(LINES - 3, 0, "%*s", COLS, ""); // Overwrite old text with spaces
-      if (confirm == 'y' || confirm == 'Y') {
-        kill_process_group(groups[selected].name, scan_processes(config.protected_processes));
-        mvprintw(LINES - 3, 0, "Process group killed!");
-        groups = group_processes(scan_processes(config.protected_processes));
-        last_refresh = std::chrono::steady_clock::now();
-      } else {
-        mvprintw(LINES - 3, 0, "Kill cancelled.");
+      // Confirmation prompt for kill action
+      if (key == 'k') {
+        bool killed =
+            kill_group_display(groups[selected].name, scan_processes(config.protected_processes));
+        if (killed) {
+          // Rescan immediately after a kill so the list reflects it right away
+          groups = group_processes(scan_processes(config.protected_processes));
+          last_refresh = std::chrono::steady_clock::now();
+        }
+        // Wait briefly so user can see the result
+        napms(1000);
       }
-      refresh();
-      // Wait briefly so user can see the result
-      napms(1000);
     }
   }
 
