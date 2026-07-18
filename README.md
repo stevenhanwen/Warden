@@ -7,6 +7,7 @@ Warden is a macOS command-line tool that scans running processes and automatical
 - Scans all running processses on macOS
 - Groups processes by application (e.g., combines helpers and the main application itself)
 - Summarizes memory usage and process counts per app
+- Search mode can be used for searching process names
 - Simple and easy to use command-line interface
 
 > More extensive work is in progress.
