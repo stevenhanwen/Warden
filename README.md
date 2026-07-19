@@ -20,6 +20,7 @@ Warden is a macOS command-line tool that scans running processes and automatical
 
 ```sh
 brew install stevenhanwen/warden/warden
+warden
 ```
 
 ### Update
