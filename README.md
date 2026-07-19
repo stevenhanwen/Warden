@@ -16,7 +16,7 @@ Warden is a macOS command-line tool that scans running processes and automatical
 
 ## Using Warden
 
-### Install via Homebrew
+### Install and run via Homebrew
 
 ```sh
 brew install stevenhanwen/warden/warden
