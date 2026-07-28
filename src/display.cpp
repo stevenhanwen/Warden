@@ -215,10 +215,12 @@ int main(int argc, char *argv[]) {
   Config config = load_config("warden.conf");
 
   if (argc > 1) {
+    // Get version of Warden installed
     if (argc == 2 && std::string(argv[1]) == "--version") {
       std::cout << "warden 1.0.0" << std::endl;
     }
 
+    // Kill a process directy from command line using Warden
     if (argc == 3 && std::string(argv[1]) == "kill") {
       std::string group_name = argv[2];
       kill_process_group(group_name, scan_processes(config.protected_processes));
