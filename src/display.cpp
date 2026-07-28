@@ -3,6 +3,7 @@
 #include "process.h"
 #include <cctype>
 #include <chrono>
+#include <iostream>
 #include <ncurses.h>
 #include <unistd.h>
 
@@ -210,13 +211,29 @@ void search_display(const int limit) {
   }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+  Config config = load_config("warden.conf");
+
+  if (argc > 1) {
+    // Get version of Warden installed
+    if (argc == 2 && std::string(argv[1]) == "--version") {
+      std::cout << "warden 1.0.0" << std::endl;
+    }
+
+    // Kill a process directy from command line using Warden
+    if (argc == 3 && std::string(argv[1]) == "kill") {
+      std::string group_name = argv[2];
+      kill_process_group(group_name, scan_processes(config.protected_processes));
+    }
+
+    return 0;
+  }
+
   initscr();
   noecho();             // doesnt print keypresses
   cbreak();             // makes keypresses instant without needing enter
   keypad(stdscr, true); // allows for arrow keys
   timeout(100); // Controls how long getch() waits for a keypress before giving up and returning -1.
-  Config config = load_config("warden.conf");
   long limit = config.limit;
 
   int selected = 0; // currently selected item
