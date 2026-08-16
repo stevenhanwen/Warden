@@ -191,8 +191,10 @@ void search_display(const int limit) {
     if (mode == "kill") {
       // Confirmation prompt for kill action
       if (key == 'k') {
-        bool killed = kill_group_display(local_groups[selected].name,
-                                         scan_processes(config.protected_processes));
+        bool killed = false;
+        if (const AppGroup *selected_group = selected_group_for_kill(filtered_groups, selected)) {
+          killed = kill_group_display(selected_group->name, scan_processes(config.protected_processes));
+        }
         if (killed) {
           // Rescan immediately after a kill so the list reflects it right away
           local_groups = group_processes(scan_processes(config.protected_processes));

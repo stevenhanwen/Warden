@@ -42,3 +42,24 @@ TEST(TestSearchProcessGroup, TestRegularSearch) {
   ProcessGroupVec expected = {{"Claude", 100, 5}};
   EXPECT_EQ(result, expected);
 }
+
+TEST(TestSearchProcessGroup, TestSelectedGroupForKillUsesFilteredListIndex) {
+  ProcessGroupVec app_groups;
+  app_groups.push_back({"Google", 50, 3});
+  app_groups.push_back({"Claude", 100, 5});
+  app_groups.push_back({"GitHub", 200, 7});
+
+  std::string search_term = "Cl";
+  ProcessGroupVec filtered = search_processes(search_term, app_groups);
+  ASSERT_EQ(filtered.size(), 1);
+
+  const AppGroup *selected = selected_group_for_kill(filtered, 0);
+  ASSERT_NE(selected, nullptr);
+  EXPECT_EQ(selected->name, "Claude");
+}
+
+TEST(TestSearchProcessGroup, TestSelectedGroupForKillOutOfRange) {
+  ProcessGroupVec filtered = {{"Claude", 100, 5}};
+  EXPECT_EQ(selected_group_for_kill(filtered, -1), nullptr);
+  EXPECT_EQ(selected_group_for_kill(filtered, 1), nullptr);
+}

@@ -53,3 +53,6 @@ ProcessGroupVec group_processes(const std::vector<Process> &processes);
 // in sorted order such that the earlier the search string appears
 // (the index of position), the earlier in the vector it will be.
 ProcessGroupVec search_processes(std::string &search, const ProcessGroupVec &groups);
+
+// Returns selected process group from a filtered process list, nullptr if index is invalid.
+const AppGroup *selected_group_for_kill(const ProcessGroupVec &filtered_groups, int selected);

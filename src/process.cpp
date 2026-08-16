@@ -170,3 +170,11 @@ ProcessGroupVec search_processes(std::string &search, const ProcessGroupVec &gro
 
   return result;
 }
+
+const AppGroup *selected_group_for_kill(const ProcessGroupVec &filtered_groups, int selected) {
+  if (selected < 0 || selected >= static_cast<int>(filtered_groups.size())) {
+    return nullptr;
+  }
+
+  return &filtered_groups[selected];
+}
